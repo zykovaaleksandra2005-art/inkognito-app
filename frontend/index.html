@@ -3,24 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inkognito</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <title>Incognito</title>
 </head>
 <body>
-
-    <div class="card">
-        <p class="quote" id="quote-text">Загрузка цитаты...</p>
-        <button onclick="alert('Go-бэкенд принял запрос!')">Хочу читать</button>
+    <!-- Главный контейнер-сетка, куда будут загружаться карточки -->
+    <div id="cards-grid" class="cards-container">
+        <!-- Карточки сгенерируются сюда автоматически через main.js -->
     </div>
 
-    <script>
-        // Код автоматически запрашивает цитату у Go при открытии сайта
-        fetch('/api/quote')
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('quote-text').innerText = data.quote;
-            })
-            .catch(err => console.error("Ошибка загрузки:", err));
-    </script>
+    <!-- Подключаем скрипт сборщика (Wails сам его обработает) -->
+    <script type="module" src="/src/main.js"></script>
 </body>
 </html>
