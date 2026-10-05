@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inkognito</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+    <div class="card">
+        <p class="quote" id="quote-text">Загрузка цитаты...</p>
+        <button onclick="alert('Go-бэкенд принял запрос!')">Хочу читать</button>
+    </div>
+
+    <script>
+        // Код автоматически запрашивает цитату у Go при открытии сайта
+        fetch('/api/quote')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('quote-text').innerText = data.quote;
+            })
+            .catch(err => console.error("Ошибка загрузки:", err));
+    </script>
+</body>
+</html>

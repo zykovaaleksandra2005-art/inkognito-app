@@ -1,0 +1,13 @@
+{
+  "$schema": "https://wails.io/schemas/config.v2.json",
+  "name": "inkognito-app",
+  "outputfilename": "inkognito-app",
+  "frontend:install": "npm install",
+  "frontend:build": "npm run build",
+  "frontend:dev:watcher": "npm run dev",
+  "frontend:dev:serverUrl": "auto",
+  "author": {
+    "name": "zykovaaleksandra2005-art",
+    "email": "zykovaaleksandra2005@gmail.com"
+  }
+}
