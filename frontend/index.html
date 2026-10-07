@@ -6,12 +6,34 @@
     <title>Incognito</title>
 </head>
 <body>
-    <!-- Главный контейнер-сетка, куда будут загружаться карточки -->
+    <!-- ЭКРАН 1: Главная сетка карточек -->
     <div id="cards-grid" class="cards-container">
         <!-- Карточки сгенерируются сюда автоматически через main.js -->
     </div>
 
-    <!-- Подключаем скрипт сборщика (Wails сам его обработает) -->
+    <!-- ЭКРАН 2: Настоящий экран чтения (Скрипт main.js ищет эти элементы!) -->
+    <div id="reader-screen" class="reader-container hidden">
+        <div class="reader-header">
+            <button id="back-to-feed-btn" class="back-btn">← Меню</button>
+            <div id="book-meta-info">
+                <span id="reader-author">Автор</span> — <strong id="reader-title">Название</strong>
+            </div>
+        </div>
+
+        <div class="book-content">
+            <h2 id="chapter-title">Глава I</h2>
+            <p id="reader-text">Текст книги...</p>
+        </div>
+
+        <!-- Панель перелистывания глав -->
+        <div class="reader-navigation">
+            <button id="prev-chapter-btn" class="nav-btn">Назад</button>
+            <span id="chapter-counter">Глава 1 из 5</span>
+            <button id="next-chapter-btn" class="nav-btn">Вперед</button>
+        </div>
+    </div>
+
+    <!-- Подключаем скрипт сборщика -->
     <script type="module" src="/src/main.js"></script>
 </body>
 </html>

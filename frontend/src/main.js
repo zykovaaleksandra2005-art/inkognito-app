@@ -1,73 +1,111 @@
-import './style.css'; // Подключаем наши неоновые стили
-// Импортируем сгенерированные Wails функции нашего моста
-import { GetFeedQuotes, ToggleLike } from '../wailsjs/go/main/App';
+import './app.css';
 
-// Функция, которая отрисовывает карточки на экране
-async function renderFeed() {
-    const grid = document.getElementById('cards-grid');
-    if (!grid) return;
+const cardsGrid = document.getElementById('cards-grid');
+const readerScreen = document.getElementById('reader-screen');
+const readerTitle = document.getElementById('reader-title');
+const readerAuthor = document.getElementById('reader-author');
+const chapterTitle = document.getElementById('chapter-title');
+const readerText = document.getElementById('reader-text');
+const backBtn = document.getElementById('back-to-feed-btn');
 
+const prevBtn = document.getElementById('prev-chapter-btn');
+const nextBtn = document.getElementById('next-chapter-btn');
+const chapterCounter = document.getElementById('chapter-counter');
+
+let cachedQuotes = [];
+let currentBook = null;        
+let currentChapterIndex = 0;   
+
+async function renderCards() {
     try {
-        // 1. Запрашиваем у Go-бэкенда массив наших карточек
-        const quotes = await GetFeedQuotes();
+        cachedQuotes = await window.go.main.App.GetFeedQuotes();
+        cardsGrid.innerHTML = '';
 
-        // Очищаем контейнер от старых надписей перед загрузкой
-        grid.innerHTML = '';
-
-        // 2. Проходимся циклом по каждой цитате и генерируем HTML-код
-        quotes.forEach(quote => {
-            const card = document.createElement('div');
-            // Добавляем класс базовой карточки и класс цвета (purple, orange, teal)
-            card.className = `quote-card ${quote.color}`;
-
-            // Формируем внутренности карточки: текст, кнопку и сердечко
-            card.innerHTML = `
-                <div class="quote-text">
-                    ${quote.text}
-                </div>
-                <div class="card-footer">
-                    <button class="read-btn" onclick="openBook('${quote.full_text}')">Хочу читать</button>
-                    <span class="like-icon" onclick="handleLike(event, ${quote.id}, this)">
+        cachedQuotes.forEach(quote => {
+            const cardElement = document.createElement('div');
+            cardElement.className = `card ${quote.color}`;
+            cardElement.innerHTML = `
+                <div class="card-text">"${quote.text}"</div>
+                <div class="card-actions">
+                    <button class="read-btn" data-id="${quote.id}">Хочу читать</button>
+                    <button class="like-btn" data-id="${quote.id}">
                         ${quote.is_liked ? '❤️' : '🤍'}
-                    </span>
+                    </button>
                 </div>
             `;
-
-            grid.appendChild(card);
+            cardsGrid.appendChild(cardElement);
         });
 
+        setupEventListeners();
     } catch (err) {
-        console.error("Не удалось загрузить ленту цитат:", err);
-        grid.innerHTML = `<div style="color: white; padding: 20px;">Ошибка загрузки бэкенда...</div>`;
+        console.error("Ошибка при получении карточек:", err);
     }
 }
 
-// Глобальная функция для обработки клика по лайку
-window.handleLike = async function(event, id, element) {
-    event.stopPropagation(); // Чтобы клик по лайку не открывал всю книгу
-    try {
-        const success = await ToggleLike(id);
-        if (success) {
-            // Переключаем сердечко на экране (простая визуальная логика)
-            if (element.innerText === '🤍') {
-                element.innerText = '❤️';
-            } else {
-                element.innerText = '🤍';
+function updateReaderContent() {
+    if (!currentBook || !currentBook.chapters || currentBook.chapters.length === 0) return;
+
+    const chapter = currentBook.chapters[currentChapterIndex];
+    
+    chapterTitle.innerText = chapter.title;
+    readerText.innerText = chapter.text;
+    
+    chapterCounter.innerText = `Глава ${currentChapterIndex + 1} из ${currentBook.chapters.length}`;
+
+    prevBtn.disabled = currentChapterIndex === 0;
+    nextBtn.disabled = currentChapterIndex === currentBook.chapters.length - 1;
+
+    window.scrollTo(0, 0);
+}
+
+function setupEventListeners() {
+    document.querySelectorAll('.like-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const id = parseInt(e.target.getAttribute('data-id'));
+            const nowLiked = await window.go.main.App.ToggleLike(id);
+            e.target.innerText = nowLiked ? '❤️' : '🤍';
+            const quote = cachedQuotes.find(q => q.id === id);
+            if (quote) quote.is_liked = nowLiked;
+        });
+    });
+
+    document.querySelectorAll('.read-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const id = parseInt(e.target.getAttribute('data-id'));
+            currentBook = cachedQuotes.find(q => q.id === id);
+            
+            if (currentBook) {
+                currentChapterIndex = 0; 
+                
+                readerTitle.innerText = currentBook.title;
+                readerAuthor.innerText = currentBook.author;
+
+                updateReaderContent();
+
+                cardsGrid.classList.add('hidden');
+                readerScreen.classList.remove('hidden');
             }
-        }
-    } catch (err) {
-        console.error("Ошибка при переключении лайка:", err);
+        });
+    });
+}
+
+prevBtn.addEventListener('click', () => {
+    if (currentChapterIndex > 0) {
+        currentChapterIndex--;
+        updateReaderContent();
     }
-}
-
-// Глобальная функция для кнопки "Хочу читать"
-window.openBook = function(fullText) {
-    // Пока просто выводим текст в обычном всплывающем окне
-    // В будущем Девочка №1 сделает для этого красивое модальное окно поверх экрана
-    alert(fullText);
-}
-
-// Как только HTML загрузился — запускаем рендеринг карточек
-document.addEventListener('DOMContentLoaded', () => {
-    renderFeed();
 });
+
+nextBtn.addEventListener('click', () => {
+    if (currentBook && currentChapterIndex < currentBook.chapters.length - 1) {
+        currentChapterIndex++;
+        updateReaderContent();
+    }
+});
+
+backBtn.addEventListener('click', () => {
+    readerScreen.classList.add('hidden');
+    cardsGrid.classList.remove('hidden');
+});
+
+document.addEventListener('DOMContentLoaded', renderCards);

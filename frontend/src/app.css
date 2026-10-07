@@ -1,54 +1,207 @@
-#logo {
-    display: block;
-    width: 50%;
-    height: 50%;
-    margin: auto;
-    padding: 10% 0 0;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: 100% 100%;
-    background-origin: content-box;
+/* Общие настройки для темной темы */
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background-color: #1b2636;
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+    box-sizing: border-box;
 }
 
-.result {
-    height: 20px;
-    line-height: 20px;
-    margin: 1.5rem auto;
+/* Сетка для 6 карточек (3 колонки на десктопе) */
+.cards-container {
+    display: grid;
+    grid-template-columns: repeat(3, 300px);
+    gap: 30px;
+    justify-content: center;
+    margin-top: 40px;
 }
 
-.input-box .btn {
-    width: 60px;
-    height: 30px;
-    line-height: 30px;
-    border-radius: 3px;
+/* Базовая карточка */
+.card {
+    background: rgba(255, 255, 255, 0.07);
+    border-radius: 20px;
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 320px;
+    box-sizing: border-box;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+/* Стили неонового свечения (Glow) */
+.card.purple {
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.2);
+    border: 1px solid rgba(168, 85, 247, 0.4);
+}
+.card.purple:hover {
+    box-shadow: 0 0 35px rgba(168, 85, 247, 0.5);
+}
+
+.card.orange {
+    box-shadow: 0 0 20px rgba(249, 115, 22, 0.2);
+    border: 1px solid rgba(249, 115, 22, 0.4);
+}
+.card.orange:hover {
+    box-shadow: 0 0 35px rgba(249, 115, 22, 0.5);
+}
+
+.card.teal {
+    box-shadow: 0 0 20px rgba(20, 184, 166, 0.2);
+    border: 1px solid rgba(20, 184, 166, 0.4);
+}
+.card.teal:hover {
+    box-shadow: 0 0 35px rgba(20, 184, 166, 0.5);
+}
+
+/* Текст цитаты */
+.card-text {
+    font-size: 16px;
+    line-height: 1.5;
+    color: #e2e8f0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 7;
+    -webkit-box-orient: vertical;
+}
+
+/* Панель действий */
+.card-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 15px;
+}
+
+.read-btn {
+    background: transparent;
     border: none;
-    margin: 0 0 0 20px;
-    padding: 0 8px;
+    color: #cbd5e1;
+    font-size: 14px;
     cursor: pointer;
+    padding: 5px 0;
+    font-weight: 500;
+    transition: color 0.2s;
 }
 
-.input-box .btn:hover {
-    background-image: linear-gradient(to top, #cfd9df 0%, #e2ebf0 100%);
-    color: #333333;
+.read-btn:hover {
+    color: #ffffff;
+    text-decoration: underline;
 }
 
-.input-box .input {
+.like-btn {
+    background: transparent;
     border: none;
-    border-radius: 3px;
-    outline: none;
-    height: 30px;
-    line-height: 30px;
-    padding: 0 10px;
-    background-color: rgba(240, 240, 240, 1);
-    -webkit-font-smoothing: antialiased;
+    font-size: 20px;
+    cursor: pointer;
+    transition: transform 0.1s ease;
+    padding: 5px;
 }
 
-.input-box .input:hover {
-    border: none;
-    background-color: rgba(255, 255, 255, 1);
+.like-btn:active {
+    transform: scale(1.2);
 }
 
-.input-box .input:focus {
-    border: none;
-    background-color: rgba(255, 255, 255, 1);
+.hidden {
+    display: none !important;
+}
+
+/* Экран чтения */
+.reader-container {
+    width: 100%;
+    max-width: 700px;
+    margin: 40px auto;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.reader-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 15px;
+    margin-bottom: 25px;
+}
+
+#book-meta-info {
+    font-size: 14px;
+    color: #94a3b8;
+}
+
+.back-btn {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #cbd5e1;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.back-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+#chapter-title {
+    color: #f8fafc;
+    font-size: 22px;
+    margin-bottom: 15px;
+}
+
+.book-content p {
+    font-size: 18px;
+    line-height: 1.7;
+    color: #cbd5e1;
+    text-align: justify;
+    white-space: pre-line;
+}
+
+.reader-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 40px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 20px;
+}
+
+.nav-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s;
+}
+
+.nav-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.nav-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+#chapter-counter {
+    font-size: 14px;
+    color: #94a3b8;
 }
