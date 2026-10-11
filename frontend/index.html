@@ -4,15 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Incognito</title>
+    <!-- Подключаем стили нашего приложения -->
     <link rel="stylesheet" href="/src/app.css">
 </head>
 <body>
-    <!-- ЭКРАН 1: Главная сетка карточек -->
-    <div id="cards-grid" class="cards-container">
-        <!-- Карточки сгенерируются сюда автоматически через main.js -->
+    <!-- БЛОК ПОИСКА: Всегда зафиксирован в левом верхнем углу страницы -->
+    <div class="search-container">
+        <input type="text" id="search-input" placeholder="Поиск по цитате, автору или названию..." autocomplete="off">
     </div>
 
-    <!-- ЭКРАН 2: Настоящий экран чтения (Скрипт main.js ищет эти элементы!) -->
+    <!-- КНОПКА ИЗБРАННОГО: Всегда зафиксирована в правом верхнем углу страницы -->
+    <button id="toggle-favorites-btn" class="favorites-toggle-btn">❤️ Избранное</button>
+
+    <!-- ЭКРАН 1: Главная сетка неоновых карточек -->
+    <div id="cards-grid" class="cards-container">
+        <!-- Карточки автоматически генерируются и фильтруются через main.js -->
+    </div>
+
+    <!-- ЭКРАН 2: Режим чтения книги -->
     <div id="reader-screen" class="reader-container hidden">
         <div class="reader-header">
             <button id="back-to-feed-btn" class="back-btn">← Меню</button>
@@ -26,7 +35,7 @@
             <p id="reader-text">Текст книги...</p>
         </div>
 
-        <!-- Панель перелистывания глав -->
+        <!-- Панель перелистывания глав внутри читалки -->
         <div class="reader-navigation">
             <button id="prev-chapter-btn" class="nav-btn">Назад</button>
             <span id="chapter-counter">Глава 1 из 5</span>
@@ -34,7 +43,19 @@
         </div>
     </div>
 
-    <!-- Подключаем скрипт сборщика -->
+    <!-- БОКОВАЯ ПАНЕЛЬ: Список залайканных книг -->
+    <div id="favorites-sidebar" class="favorites-sidebar hidden">
+        <div class="sidebar-header">
+            <h3>Избранные книги</h3>
+            <button id="close-favorites-btn" class="close-btn">×</button>
+        </div>
+        <div id="favorites-list" class="favorites-list">
+            <!-- Сюда динамически добавляются элементы избранного через main.js -->
+            <p class="empty-message">Здесь пока ничего нет...</p>
+        </div>
+    </div>
+
+    <!-- Подключаем главный JavaScript-файл приложения -->
     <script type="module" src="/src/main.js"></script>
 </body>
 </html>
