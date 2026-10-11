@@ -2,8 +2,19 @@ package main
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
 	"sync"
 )
+
+// Имя нашей папки с базой данных
+const jsonDirName = "database"
+
+// Старое имя файла для миграции данных
+const oldJsonFileName = "data.json"
 
 type App struct {
 	ctx   context.Context
@@ -12,120 +23,104 @@ type App struct {
 }
 
 func NewApp() *App {
-	return &App{
-		cards: []BookQuote{
-			{
-				ID:      1,
-				Text:    "Мы привыкли выбирать книги по красивой обложке. Это приложение предлагает выбирать книгу «вслепую» — только по её душе...",
-				Color:   "purple",
-				Title:   "Маленький принц",
-				Author:  "Антуан де Сент-Экзюпери",
-				IsLiked: false,
-				Chapters: []Chapter{
-					{
-						Title: "Глава I",
-						Text:  "Когда мне было шесть лет, в одной книге под названием «Правдивые истории», где рассказывалось про девственные леса, я увидел замечательную картинку. На картинке огромная змея — боа-констриктор — глотала хищного зверя.\n\nВ книге говорилось: «Боа заглатывает свою добычу целиком, не разжевывая. После этого она не может шевельнуться и спит полгода подряд, пока не переварит пищу».",
-					},
-					{
-						Title: "Глава II",
-						Text:  "Итак, я жил в одиночестве, и не с кем мне было поговорить по душам, как вдруг шесть лет назад из-за аварии мотора мне не пришлось сделать вынужденную посадку в пустыне Сахара. Что-то сломалось в двигателе моего самолета...\n\nВообразите же мое удивление, когда на рассвете меня разбудил чей-то тонкий голосок. Он сказал:\n— Пожалуйста... нарисуй мне барашка!",
-					},
-				},
-			},
-			{
-				ID:      2,
-				Text:    "Всё течёт, всё меняется. И никто не может войти в одну и ту же реку дважды.",
-				Color:   "orange",
-				Title:   "Цитаты философии",
-				Author:  "Гераклит",
-				IsLiked: true,
-				Chapters: []Chapter{
-					{
-						Title: "О Постоянном Изменении",
-						Text:  "Этот космос, один и тот же для всего сущего, не создал никто из богов и никто из людей, но он всегда был, есть и будет вечно живым огнем, мерами загорающимся и мерами угасающим.",
-					},
-				},
-			},
-			{
-				ID:      3,
-				Text:    "Свобода ничего не стоит, если она не включает в себя свобову ошибаться.",
-				Color:   "teal",
-				Title:   "Путь к свободе",
-				Author:  "Махатма Ганди",
-				IsLiked: false,
-				Chapters: []Chapter{
-					{
-						Title: "Часть 1",
-						Text:  "Моя вера в ненасилие обязывает меня к самому решительному протесту против беззакония. Свобода — это ничто, если человек не имеет права совершать ошибки и учиться на них.",
-					},
-				},
-			},
-			{
-				ID:      4,
-				Text:    "Быть или не быть, вот в чём вопрос. Достойно ль смиряться под ударами судьбы?",
-				Color:   "purple",
-				Title:   "Гамлет",
-				Author:  "Уильям Шекспир",
-				IsLiked: false,
-				Chapters: []Chapter{
-					{
-						Title: "Акт I, Сцена 1",
-						Text:  "Эльсинор. Площадка перед замком. На посту Франсиско. К нему подходит Бернардо.\n\nБернардо: Кто здесь?\nФрансиско: Нет, сам ответь; замри и назовись.\nБернардо: Да здравствует король!\nФрансиско: Бернардо?",
-					},
-					{
-						Title: "Акт I, Сцена 2",
-						Text:  "Торжественная зала в замке. Входят король, королева, Гамлет, Полоний, Лаэрт.\n\nКороль: Хоть смерть ухода дорогого брата еще свежа в нас... Однако разум борется с природой.",
-					},
-				},
-			},
-			{
-				ID:      5,
-				Text:    "Ты навсегда в ответе за всех, кого приручил. Это самый главный секрет...",
-				Color:   "orange",
-				Title:   "Планета Людей",
-				Author:  "Антуан де Сент-Экзюпери",
-				IsLiked: false,
-				Chapters: []Chapter{
-					{
-						Title: "В пустыне",
-						Text:  "Земля помогает нам понять самих себя, как не помогут никакие книги. Ибо земля нам сопротивляется. Человек познает себя в борьбе с препятствиями.",
-					},
-				},
-			},
-			{
-				ID:      6,
-				Text:    "Красота спасёт мир — мысль чистая, но глубокая, требующая особого понимания.",
-				Color:   "teal",
-				Title:   "Идиот",
-				Author:  "Федор Достоевский",
-				IsLiked: true,
-				Chapters: []Chapter{
-					{
-						Title: "Часть Первая",
-						Text:  "В конце ноября, в оттепель, часов в девять утра, поезд Петербургско-Варшавской железной дороги на всех парах подходил к Петербургу. Было так сыро и туманно, что едва рассвело...",
-					},
-				},
-			},
-		},
+	return &App{}
+}
+
+// startup автоматически вызывается Wails при старте приложения
+func (a *App) startup(ctx context.Context) {
+	a.ctx = ctx
+	a.loadData() // Читаем данные из папки database при запуске
+}
+
+// Функция для пофайлового чтения данных из папки database
+func (a *App) loadData() {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+
+	a.cards = []BookQuote{}
+
+	// Проверяем, существует ли ещё старый общий data.json в корне проекта.
+	// Если существует, мы автоматически разобьем его на 6 отдельных файлов.
+	if _, err := os.Stat(oldJsonFileName); err == nil {
+		fileData, err := os.ReadFile(oldJsonFileName)
+		if err == nil {
+			var oldCards []BookQuote
+			if json.Unmarshal(fileData, &oldCards) == nil {
+				// Убеждаемся, что папка database создана
+				_ = os.MkdirAll(jsonDirName, 0755)
+
+				// Сохраняем каждую карточку в её собственный JSON файл
+				for _, card := range oldCards {
+					cardData, _ := json.MarshalIndent(card, "", "    ")
+					filePath := filepath.Join(jsonDirName, fmt.Sprintf("%d.json", card.ID))
+					_ = os.WriteFile(filePath, cardData, 0644)
+				}
+				// Удаляем старый файл, так как данные успешно перенесены в папку database
+				_ = os.Remove(oldJsonFileName)
+			}
+		}
+	}
+
+	// Читаем список всех файлов внутри обновленной папки database
+	files, err := os.ReadDir(jsonDirName)
+	if err != nil {
+		return
+	}
+
+	// Проходим циклом по каждому найденному файлу
+	for _, file := range files {
+		// Пропускаем папки и файлы, которые не являются .json
+		if file.IsDir() || !strings.HasSuffix(file.Name(), ".json") {
+			continue
+		}
+
+		// Формируем путь, например: "database/1.json"
+		filePath := filepath.Join(jsonDirName, file.Name())
+		fileData, err := os.ReadFile(filePath)
+		if err != nil {
+			continue
+		}
+
+		// Десериализуем одну конкретную книгу
+		var singleBook BookQuote
+		if err := json.Unmarshal(fileData, &singleBook); err != nil {
+			continue
+		}
+
+		// Добавляем прочитанную книгу в наш общий массив карточек
+		a.cards = append(a.cards, singleBook)
 	}
 }
 
-func (a *App) startup(ctx context.Context) {
-	a.ctx = ctx
-}
-
+// Передаем список всех загруженных книг на фронтенд
 func (a *App) GetFeedQuotes() []BookQuote {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	return a.cards
 }
 
+// Переключаем лайк и СРАЗУ перезаписываем файл только одной измененной книги
 func (a *App) ToggleLike(id int) bool {
 	a.mu.Lock()
 	defer a.mu.Unlock()
+
 	for i, card := range a.cards {
 		if card.ID == id {
+			// Меняем статус лайка в памяти приложения
 			a.cards[i].IsLiked = !a.cards[i].IsLiked
+
+			// Превращаем измененную книгу обратно в красивый JSON
+			jsonData, err := json.MarshalIndent(a.cards[i], "", "    ")
+			if err != nil {
+				return a.cards[i].IsLiked
+			}
+
+			// Формируем путь к её личному файлу (например, "database/1.json")
+			filePath := filepath.Join(jsonDirName, fmt.Sprintf("%d.json", id))
+
+			// Перезаписываем этот конкретный файл на диске
+			_ = os.WriteFile(filePath, jsonData, 0644)
+
 			return a.cards[i].IsLiked
 		}
 	}

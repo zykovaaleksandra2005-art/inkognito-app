@@ -1,4 +1,4 @@
-import './app.css';
+//import './app.css';
 
 const cardsGrid = document.getElementById('cards-grid');
 const readerScreen = document.getElementById('reader-screen');
@@ -16,9 +16,19 @@ let cachedQuotes = [];
 let currentBook = null;        
 let currentChapterIndex = 0;   
 
+// Проверяем, запущено ли приложение внутри Wails
+const isWails = window.go && window.go.main && window.go.main.App;
+
 async function renderCards() {
     try {
-        cachedQuotes = await window.go.main.App.GetFeedQuotes();
+        // Умное получение данных: Wails или обычный HTTP-запрос для сайта
+        if (isWails) {
+            cachedQuotes = await window.go.main.App.GetFeedQuotes();
+        } else {
+            const response = await fetch('/api/quote');
+            cachedQuotes = await response.json();
+        }
+
         cardsGrid.innerHTML = '';
 
         cachedQuotes.forEach(quote => {
@@ -62,7 +72,20 @@ function setupEventListeners() {
     document.querySelectorAll('.like-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             const id = parseInt(e.target.getAttribute('data-id'));
-            const nowLiked = await window.go.main.App.ToggleLike(id);
+            let nowLiked = false;
+
+            // Умный лайк: в Wails шлем в Go-скрипт, на сайте пока просто меняем в интерфейсе
+            if (isWails) {
+                nowLiked = await window.go.main.App.ToggleLike(id);
+            } else {
+                const quote = cachedQuotes.find(q => q.id === id);
+                if (quote) {
+                    quote.is_liked = !quote.is_liked;
+                    nowLiked = quote.is_liked;
+                    // Здесь в будущем можно добавить fetch('/api/like', {method: 'POST'})
+                }
+            }
+
             e.target.innerText = nowLiked ? '❤️' : '🤍';
             const quote = cachedQuotes.find(q => q.id === id);
             if (quote) quote.is_liked = nowLiked;
@@ -98,7 +121,7 @@ prevBtn.addEventListener('click', () => {
 
 nextBtn.addEventListener('click', () => {
     if (currentBook && currentChapterIndex < currentBook.chapters.length - 1) {
-        currentChapterIndex++;
+        currentBook && currentChapterIndex++;
         updateReaderContent();
     }
 });
